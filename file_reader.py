@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import glob
+from datetime import datetime
 
 '''
 I WANT THIS CODE TO:
@@ -32,6 +33,9 @@ print(jtl_files_list)
 #Read all the JTL files into a single data frame
 
 jmeter_results_df = pd.concat(map(pd.read_csv, jtl_files_list))  
+print(1675109124185//1000)
+#print (datetime.fromtimestamp())
+jmeter_results_df["DateTime"] = jmeter_results_df["timeStamp"].apply(lambda row: datetime.fromtimestamp(row // 1000))
 
 #Print out some details here to check it worked and if timeStamp has only unique values (it doesn't!)
 print(jmeter_results_df.head())
@@ -53,19 +57,26 @@ average_responseTimes["Response Time (seconds)"] = average_responseTimes["Respon
 
 average_responseTimes = average_responseTimes.round(decimals=2)
 
+average_responseTimes= average_responseTimes.transpose()
+
 print(average_responseTimes)
 
 average_responseTimes.to_csv("TestResults/Transaction Response Times - Average.csv")
 
 fig, ax = plt.subplots(dpi=300, figsize=(24,6))
 
+ax.set_ylabel("Response Time Seconds")
 #average_responseTimes['Adj Close'].plot(ax=ax, label="Share Price")
 
-average_responseTimes.transpose().plot(ax=ax, kind='bar')
+average_responseTimes.plot(ax=ax, kind='bar')
+
+ax.get_legend().remove()
+
+ax.axes.get_xaxis().set_visible(False)
 
 # Put a legend below current axis
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-          fancybox=True, shadow=True, ncol=5)
+          fancybox=True, shadow=True, ncol=3)
 
 #fig.legend()
 
@@ -99,3 +110,30 @@ error_count = jmeter_results_df.apply(lambda row: row[jmeter_results_df['success
 print(error_count["label"].value_counts())
 
 error_count.to_csv("TestResults/Failures.csv")
+
+
+##Lets see if we can do transactions per minute
+
+times=pd.DatetimeIndex(jmeter_results_df[(jmeter_results_df["success"]==True) & (jmeter_results_df["label"].str.contains('_'))].DateTime)
+grouped_success = jmeter_results_df[(jmeter_results_df["success"]==True) & (jmeter_results_df["label"].str.contains('_'))].groupby([times.hour, times.minute]).count()
+
+#grouped_success = grouped_success["DateTime", "label"]
+
+grouped_success = grouped_success.drop(["timeStamp", "elapsed", "responseCode", "responseMessage", "threadName", "dataType", "grpThreads", "allThreads", "URL", "Latency", "IdleTime", "Connect", "success", "failureMessage", "bytes", "sentBytes", "DateTime"], axis=1)
+    
+#grouped_fail = grouped.loc[grouped["success" == False]]
+
+print(grouped_success.head(10))
+print(grouped_success.tail(10))
+
+grouped_success.columns = ["Transactions Per Minute"]
+
+fig, ax = plt.subplots(dpi=300, figsize=(24,6))
+
+grouped_success.plot(ax=ax, kind='line', label="Transactions Per Minute")
+
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+          fancybox=True, shadow=True, ncol=3)
+
+plt.savefig("TestResults/Transactions per Minute.png", bbox_inches="tight")
+
