@@ -1,0 +1,5 @@
+TestResults\
+*.log
+*.jtl
+*.txt
+*.zip
