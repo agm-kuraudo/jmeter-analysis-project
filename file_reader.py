@@ -19,7 +19,7 @@ An average response time for each transaction
 An error count
 
 '''
-
+debug=False
 
 #Get all the JTL files from the directory and put them in a list
 jtl_files_list= []
@@ -27,23 +27,23 @@ jtl_files_list= []
 for jtl_file in glob.glob("TestResults/2023 01 30 Peak Load Test Round 1/*.jtl"):
     jtl_files_list.append(jtl_file)
 
-print(jtl_files_list)
+if debug : print(jtl_files_list)
 
 
 #Read all the JTL files into a single data frame
 
 jmeter_results_df = pd.concat(map(pd.read_csv, jtl_files_list))  
-print(1675109124185//1000)
+if debug : print(1675109124185//1000)
 #print (datetime.fromtimestamp())
 jmeter_results_df["DateTime"] = jmeter_results_df["timeStamp"].apply(lambda row: datetime.fromtimestamp(row // 1000))
 
 #Print out some details here to check it worked and if timeStamp has only unique values (it doesn't!)
-print(jmeter_results_df.head())
-print(jmeter_results_df["timeStamp"].is_unique)
+if debug : print(jmeter_results_df.head())
+if debug : print(jmeter_results_df["timeStamp"].is_unique)
 
 jmeter_results_df = jmeter_results_df.sort_values(by=['timeStamp'])
 
-print(jmeter_results_df.head())
+if debug : print(jmeter_results_df.head())
 
 
 #Get the average response time for each transaction (contains an _ character) and sort longest to shortest, output to CSV
@@ -59,7 +59,7 @@ average_responseTimes = average_responseTimes.round(decimals=2)
 
 average_responseTimes= average_responseTimes.transpose()
 
-print(average_responseTimes)
+if debug : print(average_responseTimes)
 
 average_responseTimes.to_csv("TestResults/Transaction Response Times - Average.csv")
 
@@ -93,7 +93,7 @@ transaction_counts.columns = ["Count"]
 
 transaction_counts = transaction_counts.round(decimals=2)
 
-print(transaction_counts)
+if debug : print(transaction_counts)
 
 transaction_counts.to_csv("TestResults/Transaction Counts.csv")
 
@@ -107,9 +107,82 @@ error_count = jmeter_results_df.apply(lambda row: row[jmeter_results_df['success
 
 #error_count = jmeter_results_df.loc[(~jmeter_results_df["responseMessage"].str.contains("Number of samples")) & (~jmeter_results_df["responseCode"].str.contains(['200', '302', '401', '201']))]
 
-print(error_count["label"].value_counts())
+if debug : print(error_count["label"].value_counts())
 
 error_count.to_csv("TestResults/Failures.csv")
+
+
+####Seperate Counts for Pass and Failed Transactions
+##Get a transactions only dataframe
+
+def setTransactionName(df_label, df_success):
+    #print(df_label)
+    append_string = ""
+    if df_success == True:
+        append_string = " - PASS"
+    elif df_success == False:
+        append_string = " - FAIL"
+
+    if df_label[0] == "_" :
+        return df_label[1:] + append_string
+    else:
+        return df_label + append_string
+
+jmeter_results_transonly = jmeter_results_df[jmeter_results_df["responseMessage"].str.contains('Number of samples in transaction')]
+
+if debug : print(jmeter_results_transonly)
+
+#jmeter_results_transonly["Transaction Name"] = jmeter_results_transonly["label"].apply(lambda x: x[1:] if x[0]=='_' else x)
+jmeter_results_transonly["TransactionName"] = jmeter_results_transonly.apply(lambda x: setTransactionName(x.label, x.success), axis=1)
+
+if debug : print(jmeter_results_transonly)
+
+trans_grouped_df=jmeter_results_transonly.groupby("TransactionName").count()
+
+print(trans_grouped_df)
+
+jmeter_results_transonly = jmeter_results_transonly.set_index(pd.DatetimeIndex(jmeter_results_transonly.DateTime))
+print (jmeter_results_transonly)
+time_grouped_trans_df = jmeter_results_transonly.groupby("TransactionName").resample('360S', on='DateTime').count()
+print (time_grouped_trans_df)
+
+single_transaction_results = time_grouped_trans_df.filter(like='CP_EnterOTP', axis=0)
+
+print (single_transaction_results)
+
+print(single_transaction_results.drop(["TransactionName"], axis=1).reset_index().set_index("DateTime"))
+
+fig, ax = plt.subplots(dpi=300, figsize=(24,6))
+
+single_transaction_results = single_transaction_results.drop(["TransactionName"], axis=1).reset_index().set_index("DateTime")
+
+#pass_only = single_transaction_results.filter(like='CP_EnterOTP - PASS', axis=0)
+#pass_only["label"].plot(ax=ax, kind='bar', label="Pass")
+
+#fail_only = single_transaction_results.filter(like='CP_EnterOTP - FAIL', axis=0)
+pass_only = single_transaction_results[single_transaction_results["TransactionName"] == "CP_EnterOTP - PASS"]
+fail_only = single_transaction_results[single_transaction_results["TransactionName"] == "CP_EnterOTP - FAIL"]
+
+print(fail_only)
+
+#single_transaction_results["label"].plot(ax=ax, kind='bar', label="Transactions Per Minute")
+pass_only["label"].plot(ax=ax, kind='line', label="Passed Transaction Per 6 Minutes", sharex=True, subplots=True)
+fail_only["label"].plot(ax=ax, kind='line', label="Failed Transaction Per 6 Minutes", sharex=True, subplots=True)
+
+#ax2.set_xticklabels(pass_only["DateTime"])
+
+
+
+#ax.set_xticklabels(pass_only["DateTime"])
+
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+          fancybox=True, shadow=True, ncol=3)
+
+fig.savefig("TestResults/Debug.png", bbox_inches="tight")
+
+
+#################################
+
 
 
 ##Lets see if we can do transactions per minute
@@ -123,8 +196,8 @@ grouped_success = grouped_success.drop(["timeStamp", "elapsed", "responseCode", 
     
 #grouped_fail = grouped.loc[grouped["success" == False]]
 
-print(grouped_success.head(10))
-print(grouped_success.tail(10))
+if debug : print(grouped_success.head(10))
+if debug : print(grouped_success.tail(10))
 
 grouped_success.columns = ["Transactions Per Minute"]
 
