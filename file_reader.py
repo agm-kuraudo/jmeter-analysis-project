@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as md
+from matplotlib.ticker import AutoMinorLocator
 import glob
 from datetime import datetime
 
@@ -135,48 +137,67 @@ if debug : print(jmeter_results_transonly)
 #jmeter_results_transonly["Transaction Name"] = jmeter_results_transonly["label"].apply(lambda x: x[1:] if x[0]=='_' else x)
 jmeter_results_transonly["TransactionName"] = jmeter_results_transonly.apply(lambda x: setTransactionName(x.label, x.success), axis=1)
 
+##Get all of the unique Transaction Names from the dataset
+
+all_transactions = jmeter_results_transonly.TransactionName.unique()
+
+print(all_transactions)
+
 if debug : print(jmeter_results_transonly)
 
 trans_grouped_df=jmeter_results_transonly.groupby("TransactionName").count()
 
-print(trans_grouped_df)
+if debug : print(trans_grouped_df)
 
 jmeter_results_transonly = jmeter_results_transonly.set_index(pd.DatetimeIndex(jmeter_results_transonly.DateTime))
-print (jmeter_results_transonly)
-time_grouped_trans_df = jmeter_results_transonly.groupby("TransactionName").resample('360S', on='DateTime').count()
-print (time_grouped_trans_df)
-
-single_transaction_results = time_grouped_trans_df.filter(like='CP_EnterOTP', axis=0)
-
-print (single_transaction_results)
-
-print(single_transaction_results.drop(["TransactionName"], axis=1).reset_index().set_index("DateTime"))
+if debug : print (jmeter_results_transonly)
+time_grouped_trans_df = jmeter_results_transonly.groupby("TransactionName").resample('360S', on='DateTime').count() * 10
+if debug : print (time_grouped_trans_df)
 
 fig, ax = plt.subplots(dpi=300, figsize=(24,6))
 
-single_transaction_results = single_transaction_results.drop(["TransactionName"], axis=1).reset_index().set_index("DateTime")
+for transaction in all_transactions:
 
-#pass_only = single_transaction_results.filter(like='CP_EnterOTP - PASS', axis=0)
-#pass_only["label"].plot(ax=ax, kind='bar', label="Pass")
+    single_transaction_results = time_grouped_trans_df.filter(like=transaction, axis=0)
 
-#fail_only = single_transaction_results.filter(like='CP_EnterOTP - FAIL', axis=0)
-pass_only = single_transaction_results[single_transaction_results["TransactionName"] == "CP_EnterOTP - PASS"]
-fail_only = single_transaction_results[single_transaction_results["TransactionName"] == "CP_EnterOTP - FAIL"]
+    if debug : print (single_transaction_results)
 
-print(fail_only)
+    if debug : print(single_transaction_results.drop(["TransactionName"], axis=1).reset_index().set_index("DateTime"))
 
-#single_transaction_results["label"].plot(ax=ax, kind='bar', label="Transactions Per Minute")
-pass_only["label"].plot(ax=ax, kind='line', label="Passed Transaction Per 6 Minutes", sharex=True, subplots=True)
-fail_only["label"].plot(ax=ax, kind='line', label="Failed Transaction Per 6 Minutes", sharex=True, subplots=True)
+    single_transaction_results = single_transaction_results.drop(["TransactionName"], axis=1).reset_index().set_index("DateTime")
+
+    #pass_only = single_transaction_results.filter(like='CP_EnterOTP - PASS', axis=0)
+    #pass_only["label"].plot(ax=ax, kind='bar', label="Pass")
+
+    #fail_only = single_transaction_results.filter(like='CP_EnterOTP - FAIL', axis=0)
+    pass_only = single_transaction_results[single_transaction_results["TransactionName"] == transaction]
+    #fail_only = single_transaction_results[single_transaction_results["TransactionName"] == "CP_EnterOTP - FAIL"]
+
+    if debug : print(pass_only)
+
+    #single_transaction_results["label"].plot(ax=ax, kind='bar', label="Transactions Per Minute")
+    #pass_only["label"].plot(ax=ax, kind='line', label="Passed Transaction Per 6 Minutes", sharex=True, subplots=True)
+    #fail_only["label"].plot(ax=ax, kind='line', label="Failed Transaction Per 6 Minutes", sharex=True, subplots=True)
+
+    ax.plot(pass_only["label"], label=transaction)
+    #ax.plot(fail_only["label"],  label="FAIL")
+
+#ax.xaxis.set_ticklabels()
 
 #ax2.set_xticklabels(pass_only["DateTime"])
+ax.xaxis.set_major_formatter(md.DateFormatter("%H:%M"))
+ax.xaxis.set_major_locator(md.MinuteLocator(interval=15))
 
+#ax.xaxis.set_minor_locator(AutoMinorLocator())
 
+#ax.tick_params(which='minor', length=5, width=1, color='red')
 
 #ax.set_xticklabels(pass_only["DateTime"])
 
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
           fancybox=True, shadow=True, ncol=3)
+
+#fig.autofmt_xdate()
 
 fig.savefig("TestResults/Debug.png", bbox_inches="tight")
 
