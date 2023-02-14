@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import glob
 from datetime import datetime
 
@@ -115,8 +114,6 @@ error_count.to_csv("TestResults/Failures.csv")
 
 ##Lets see if we can do transactions per minute
 
-##SUCCESSFUL TRANSCTIONS
-
 times=pd.DatetimeIndex(jmeter_results_df[(jmeter_results_df["success"]==True) & (jmeter_results_df["label"].str.contains('_'))].DateTime)
 grouped_success = jmeter_results_df[(jmeter_results_df["success"]==True) & (jmeter_results_df["label"].str.contains('_'))].groupby([times.hour, times.minute]).count()
 
@@ -129,35 +126,13 @@ grouped_success = grouped_success.drop(["timeStamp", "elapsed", "responseCode", 
 print(grouped_success.head(10))
 print(grouped_success.tail(10))
 
-grouped_success.columns = ["Transactions Per Minute (Pass)"]
-
-##TODO: Group by date time first then do the filtering for pass fail etc - this will hopefully sort the data axis on the graph output
-
-####FAILED TRANSACTIONS
-times=pd.DatetimeIndex(jmeter_results_df[(jmeter_results_df["success"]==False) & (jmeter_results_df["label"].str.contains('_'))].DateTime)
-grouped_fail = jmeter_results_df[(jmeter_results_df["success"]==False) & (jmeter_results_df["label"].str.contains('_'))].groupby([times.hour, times.minute]).count()
-
-#grouped_success = grouped_success["DateTime", "label"]
-
-grouped_fail = grouped_fail.drop(["timeStamp", "elapsed", "responseCode", "responseMessage", "threadName", "dataType", "grpThreads", "allThreads", "URL", "Latency", "IdleTime", "Connect", "success", "failureMessage", "bytes", "sentBytes", "DateTime"], axis=1)
-    
-#grouped_fail = grouped.loc[grouped["success" == False]]
-
-print(grouped_fail.head(10))
-print(grouped_fail.tail(10))
-
-grouped_fail.columns = ["Transactions Per Minute (Fail)"]
-
-#############################################
+grouped_success.columns = ["Transactions Per Minute"]
 
 fig, ax = plt.subplots(dpi=300, figsize=(24,6))
 
-grouped_success.plot(ax=ax, kind='line')
-grouped_fail.plot(ax=ax, kind='line')
+grouped_success.plot(ax=ax, kind='line', label="Transactions Per Minute")
 
-ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(ax.xaxis.get_major_locator()))
-
-ax.legend(loc='upper center',
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
           fancybox=True, shadow=True, ncol=3)
 
 plt.savefig("TestResults/Transactions per Minute.png", bbox_inches="tight")
