@@ -16,16 +16,48 @@
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <intProp name="LoopController.loops">-1</intProp>
+          <stringProp name="LoopController.loops">1</stringProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">1</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
-        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration">300</stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </ThreadGroup>
       <hashTree>
+        <JDBCDataSource guiclass="TestBeanGUI" testclass="JDBCDataSource" testname="JDBC Connection Configuration" enabled="true">
+          <boolProp name="autocommit">true</boolProp>
+          <stringProp name="checkQuery"></stringProp>
+          <stringProp name="connectionAge">5000</stringProp>
+          <stringProp name="connectionProperties"></stringProp>
+          <stringProp name="dataSource">postgres_local</stringProp>
+          <stringProp name="dbUrl">jdbc:postgresql://localhost:5432/drs_perfDB</stringProp>
+          <stringProp name="driver">org.postgresql.Driver</stringProp>
+          <stringProp name="initQuery"></stringProp>
+          <boolProp name="keepAlive">true</boolProp>
+          <stringProp name="password">VandPDB606#</stringProp>
+          <stringProp name="poolMax">0</stringProp>
+          <boolProp name="preinit">false</boolProp>
+          <stringProp name="timeout">10000</stringProp>
+          <stringProp name="transactionIsolation">DEFAULT</stringProp>
+          <stringProp name="trimInterval">60000</stringProp>
+          <stringProp name="username">postgres</stringProp>
+        </JDBCDataSource>
+        <hashTree/>
+        <JDBCSampler guiclass="TestBeanGUI" testclass="JDBCSampler" testname="JDBC Request" enabled="false">
+          <stringProp name="dataSource">postgres_local</stringProp>
+          <stringProp name="queryType">Update Statement</stringProp>
+          <stringProp name="query">INSERT INTO public.events(&quot;ID&quot;, dump)	VALUES (2, &quot;test&quot;)</stringProp>
+          <stringProp name="queryArguments"></stringProp>
+          <stringProp name="queryArgumentsTypes"></stringProp>
+          <stringProp name="variableNames"></stringProp>
+          <stringProp name="resultVariable"></stringProp>
+          <stringProp name="queryTimeout"></stringProp>
+          <stringProp name="resultSetMaxRows"></stringProp>
+          <stringProp name="resultSetHandler">Store as String</stringProp>
+        </JDBCSampler>
+        <hashTree/>
         <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="Transaction_Controller" enabled="true">
           <boolProp name="TransactionController.includeTimers">false</boolProp>
           <boolProp name="TransactionController.parent">false</boolProp>
@@ -60,7 +92,7 @@
           <stringProp name="ActionProcessor.duration">3000</stringProp>
         </TestAction>
         <hashTree/>
-        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="false">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>
@@ -96,6 +128,58 @@
           </objProp>
           <stringProp name="filename"></stringProp>
         </ResultCollector>
+        <hashTree/>
+        <JSR223Listener guiclass="TestBeanGUI" testclass="JSR223Listener" testname="JSR223 Listener" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Properties;
+import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import groovy.sql.Sql;
+
+
+
+log.info(sampleResult.currentTimeInMillis().toString())
+log.info(sampleResult.getAssertionResults().toString())
+log.info(sampleResult.getBodySizeAsLong().toString())
+log.info(sampleResult.getConnectTime().toString())
+log.info(sampleResult.getContentType().toString())
+log.info(sampleResult.getErrorCount().toString())
+log.info(sampleResult.getFirstAssertionFailureMessage())
+log.info(sampleResult.getGroupThreads().toString())
+log.info(sampleResult.getLatency().toString())
+log.info(sampleResult.getResponseCode())
+log.info(sampleResult.getSampleCount().toString())
+log.info(sampleResult.getSampleLabel())
+log.info(sampleResult.getThreadName())
+log.info(sampleResult.getTime().toString())
+log.info(sampleResult.getUrlAsString())
+log.info(sampleResult.isSuccessful().toString())
+
+
+
+
+//public class JdbcPostgresqlConnection {
+ 
+    //public static void main(String[] args) {
+
+log.info(&quot;hello&quot;);
+
+def connection = org.apache.jmeter.protocol.jdbc.config.DataSourceElement.getConnection(&quot;postgres_local&quot;)
+def sql = new Sql(connection)
+
+
+sql.execute(&quot;INSERT INTO public.events(\&quot;ID\&quot;, dump)	VALUES (2, &apos;testing again!&apos;);&quot;);
+
+sql.close();
+</stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Listener>
         <hashTree/>
       </hashTree>
     </hashTree>
