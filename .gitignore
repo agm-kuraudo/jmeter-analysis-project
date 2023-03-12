@@ -5,3 +5,4 @@ TestResults\
 *.zip
 *.png
 *.csv
+*.pyc

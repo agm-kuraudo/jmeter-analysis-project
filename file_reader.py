@@ -12,12 +12,13 @@ import graph.graph as grath
 #load_test_folder = "TestResults/2023 01 30 Peak Load Test Round 1"
 #load_test_folder = "TestResults/2023 02 02 Peak Load Test Round 2"
 #load_test_folder = "TestResults/2023 02 07 Peak of Peak Tests"
-load_test_folder = "TestResults/In-Flight Test"
+load_test_folder = "C:/Users/dogeg/OneDrive - XHT/12_Client/Netcompany/DRS/Assets/TestResults/2023 02 09 Peak of Peaks Test"
 debug=True
 group_trans_by_x_secs=60
 
 #If you want to group transctions e.g by process or app - set the groups here.  If not set the "no_filter" flag to true
-transaction_grouping = ["Transaction Controller"]
+#transaction_grouping = ["Transaction Controller"]
+transaction_grouping = ["DRS_CP_Register", "DRS_CP_BasicApplication", "DRS_CP_FullApplication", "DRS_RP"]
 no_filter=True
 
 #Create a JTL Reader object
