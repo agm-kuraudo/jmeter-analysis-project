@@ -30,7 +30,7 @@ class OPs :
     def combineJTLs(self, list_of_jtls):
         '''Accepts a list containing JTLs, writes them into a single PANDAS dataframe'''
         #Read all the JTL files into a single data frame
-        self.df = pd.concat(map(lambda x: pd.read_csv(x, low_memory=False), list_of_jtls))  
+        self.df = pd.concat(map(lambda x: pd.read_csv(x, low_memory=False), list_of_jtls)) 
         return self.df
 
     def setTransactionName(self, df_label, df_success):
@@ -121,7 +121,10 @@ class OPs :
 
     def TransactionsPerXSeconds(self, X=360):
         
-        jmeter_results_transonly = self.df[self.df["responseMessage"].str.contains('Number of samples in transaction')]
+        if self.Debug:
+            print(self.df["responseMessage"])
+
+        jmeter_results_transonly = self.df[self.df["responseMessage"].str.contains('Number of samples in transaction', na=False)]
 
         ##Get all of the unique Transaction Names from the dataset
         all_transactions = jmeter_results_transonly.TransactionName.unique()

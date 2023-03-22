@@ -23,6 +23,8 @@ class ReadJTL :
         for jtl_file in glob.glob(dir):
             jtl_files_list.append(jtl_file)
         
+        print("JTL Files to be processed: ", jtl_files_list)
+
         if len(jtl_files_list) == 0:
             raise Exception("No files to read!")
         elif len(jtl_files_list)==1:
